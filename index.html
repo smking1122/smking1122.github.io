@@ -1,11 +1,355 @@
-<html><body><h1>It works! jacky</h1>
-<script>
-      function heqinclick(){
-         alert("nice job");
-     }
-    </script>
-<div style="border:1px solid #ccc;">
-<input type="button" class="helloworld" id="sayme" onClick="heqinclick()" style="background:#00ff00" value="Button">
-</div>
 
-</body></html>
+<html>
+<head>
+  <style>
+  @media screen and (max-device-width:1400px){
+    #pcwin{
+      min-width:450px;
+      min-height:600px;
+    }
+  }
+  @media screen and (min-device-width:1500px){
+    #pcwin{
+      width:800px;
+      min-height:600px;
+    }
+  }
+  #leftwin,#rightwin{
+    min-width:360px;
+    min-height:600px;
+  }
+  #inputURL{
+    width:480;
+    height:320px;
+  }
+  iframe{
+    resize:both;
+  }
+  #myiframe,#myqr{
+    text-align: center;
+    margin:0 auto;
+  } 
+  #l1,#l2,#r1,#r2,#pctips{
+    display:inline-block; 
+    min-width:100px
+  }       
+  .bt {
+    height: 32px;
+    font-size: 14px;
+    background-color: #ddd;
+    cursor: pointer;
+  }
+  #myinput,#myselect{
+    height: 32px;
+  }
+  #pcqr,#leftqr,#rightqr{
+    max-width:200px;
+    max-height:200px;
+  }
+  </style>
+  <script src="jquery.min.js"></script>
+  <script>
+  urls = new Array;
+  function init()
+  {
+    if(localStorage["urls"]){
+      urls = localStorage["urls"].split(/,/);
+      insertOption(urls);
+    }
+    var chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+    if(!chrome){
+     alert("请用Chrome 浏览器");
+   }
+   if(!localStorage["rightPrefix"]){
+     localStorage["rightPrefix"] = "http://cp01-testing-gm07.cp01.baidu.com:8003/s?word=";
+   }
+ }
+
+ function handleForm()
+ {
+  var x=document.getElementById("mySelect").selectedIndex;
+  getPage(urls[x]);
+
+}
+
+function setPrefix(side,flag)
+{
+  if(side == "left"){
+    if(flag==1){
+      index = "leftPrefix";
+    }else{
+      index = "leftDataPrefix";
+    }
+  }else{
+    if(flag==1){
+      index = "rightPrefix";
+    }else{
+      index = "rightDataPrefix";
+    }
+  }
+
+  txt=localStorage[index];
+
+  prefix=prompt("input Prefix:",txt);
+  // if(prefix!=null && prefix!="null"){
+  //   var t = 'http://';
+  //   if (prefix.length>5 && prefix.substr(0, t.length) !== t){
+  //     prefix = t+ prefix;
+  //   }
+  //   prefix = prefix.replace(/\s+/g,"");
+  //   localStorage[index] = prefix;
+  //   if(!localStorage["history_prefix"]){
+  //    localStorage["history_prefix"] = prefix;
+  //    localStorage["history_prefix"]+=" ";
+  //  }else if(localStorage["history_prefix"].indexOf(prefix) == -1){
+  //    localStorage["history_prefix"]+=prefix;
+  //    localStorage["history_prefix"]+=" ";
+  //  }
+
+   if(prefix!=null && prefix!="null"){
+    // var t = 'http://';
+    // if (prefix.length>5 && prefix.substr(0, t.length) !== t){
+    //   prefix = t+ prefix;
+    // }
+    prefix = prefix.replace(/\s+/g,"");
+    localStorage[index] = prefix;
+    if(!localStorage["history_prefix"]){
+     localStorage["history_prefix"] = prefix;
+     localStorage["history_prefix"]+=" ";
+   }else if(localStorage["history_prefix"].indexOf(prefix) == -1){
+     localStorage["history_prefix"]+=prefix;
+     localStorage["history_prefix"]+=" ";
+   }
+
+
+ }
+
+}
+
+function displayHistoryPrefix()
+{
+  if(!localStorage["history_prefix"]){
+    localStorage["history_prefix"]="";
+    if(localStorage["leftPrefix"]){
+      localStorage["history_prefix"] += localStorage["leftPrefix"]+" ";
+    }
+    if(localStorage["rightPrefix"]){
+      localStorage["history_prefix"] += localStorage["rightPrefix"]+" ";
+    }
+  }
+  if(localStorage["history_prefix"]){
+    document.getElementById("currenturl").innerHTML=localStorage["history_prefix"];
+
+  }
+}
+
+function insertOption(optionArr)
+{
+  var x=document.getElementById("mySelect");
+  while(x.firstChild){
+    x.removeChild(x.firstChild);
+  }
+  var len=0;
+  for (var i in optionArr){
+    if ( $.trim(optionArr[i]) == ''){
+      continue;
+    }
+    len++;
+    var y=document.createElement('option');
+    y.text=len+": " + optionArr[i];
+    y.value=i;
+        x.add(y,null);// standards compliant
+      }
+    }
+
+    function toggleInput()
+    {
+     $(".URLtext").toggle(200);
+
+   }
+   function handleBatchInput()
+   {
+    var myinput= $("#inputURL").val();
+    t = myinput.split(/\s/);
+    urls = new Array;
+    // for(i in t){
+    //   if(t[i].length>5){
+    //     urls.push(t[i]);
+    //   }
+    // }
+    for(i in t){
+      urls.push(t[i]);
+    }
+    insertOption(urls);
+    localStorage["urls"] = urls; 
+    $(".URLtext").toggle(200);
+  }
+
+  function handleInput()
+  {
+    var myinput= $("#myInput").val();
+    myinput = myinput.replace(/\s+/g,"");
+    getPage(myinput);
+  }
+
+
+  function handleNext(count)
+  {
+    var x=document.getElementById("mySelect").selectedIndex+count;
+    document.getElementById("mySelect").selectedIndex=x;
+  //alert(x);
+  //alert(urls.length);
+  if(x>urls.length){
+    alert("overflow last url");
+    return;
+  }
+  if(x<0){
+    alert("the first url");
+    return ;
+  }
+
+  getPage(urls[x]);
+}
+
+function handleSelect()
+{
+  var count = $("#selectIndex").val() - document.getElementById("mySelect").selectedIndex   
+  handleNext(count-1);
+}
+
+function getPage(url)
+{
+  var pc = $("#pcwin");
+  var left = $("#leftwin");
+  var right = $("#rightwin");
+  var pcqr = $("#pcqr");
+  var leftqr = $("#leftqr");
+  var rightqr = $("#rightqr");
+  // var prefix = 'http://';
+  var prefix ="";
+  if (url.substr(0, prefix.length) !== prefix){
+    url = prefix + url;
+  }
+  var qr = 'http://bytewang.duapp.com/qr.php?url=';
+  pc.attr("src",url);
+  pcqr.attr("src",qr+encodeURIComponent(url));
+  var uri = url;
+  if(localStorage["leftPrefix"]!=null){
+        //alert(localStorage["leftPrefix"]);
+        if(localStorage["leftPrefix"].length<5){
+          uri=url;
+        }else{
+          uri=localStorage["leftPrefix"]+encodeURIComponent(url);
+        }
+      }  
+      left.attr("src",uri)
+      leftqr.attr("src",qr+encodeURIComponent(uri));
+      uri = url;
+      if(localStorage["rightPrefix"]!=null){
+        if(localStorage["rightPrefix"].length<5){
+          uri=url;
+        }else{
+          uri=localStorage["rightPrefix"]+encodeURIComponent(url);
+        }
+      }
+      right.attr("src",uri)
+      rightqr.attr("src",qr+encodeURIComponent(uri));
+    //alert(left.attr("src"));
+
+    var le = document.getElementById("lefttips");
+    var la = document.getElementById("l1");
+    var lda = document.getElementById("l2");
+
+    var re = document.getElementById("righttips");
+    var ra = document.getElementById("r1");
+    var rda = document.getElementById("r2");
+    var pctips = document.getElementById("pctips");
+    var apply_news = document.getElementById("applynews");
+    // pctips.innerHTML="<input class='bt' type='button' onclick=openURL('"+url+"') value=' pc 页面 ' ></input>";
+    // apply_news.innerHTML="<input class='bt' type='button' onclick=openURL('"+left.attr("src")+"&nextpage=1&recache=1') value=' 强制正文页 ' ></input>";
+    le.innerHTML="中间窗口前缀: " + localStorage["leftPrefix"];
+    la.innerHTML="<input class='bt' type='button' onclick=openURL('"+left.attr("src")+"') value=' 中间窗口 ' ></input>";
+    // lda.innerHTML="<input class='bt' type='button' onclick=openURL('"+left.attr("src")+"&tc_source=1') value=' 中间窗口json数据 ' ></input>";
+    
+    document.getElementById("currenturl").innerHTML=url;
+
+
+    re.innerHTML="右边窗口前缀: " + localStorage["rightPrefix"];  
+    ra.innerHTML="<input class='bt' type='button' onclick=openURL('"+right.attr("src")+"') value=' 右边窗口 ' ></input>";
+    // rda.innerHTML="<input class='bt' type='button' onclick=openURL('"+right.attr("src")+"&tc_source=1') value=' 右边窗口json数据 ' ></input>";
+
+
+  }
+  function openURL(url)
+  {
+    window.open(url);
+  }
+  function controlTips()
+  {
+    $("#infoTip").toggle(200);
+    $("#setInfo").toggle(200);
+  }
+  function reloadimg(e)
+  {     
+    src = e.src;
+    e.src = src;
+  }
+  </script>
+  <meta charset="utf-8" />
+</head>
+
+<body id="mybody" onload="init()">
+  <div id="setInfo">
+    <input type="button" onclick="toggleInput()" value="批量导入 PC URL" class="bt"/>
+    <input type="button" onclick="setPrefix('left',1)" value="设置中间窗口前缀" class="bt"> </input>
+    <input type="button" onclick="setPrefix('right',1)" value="设置右边窗口前缀" class="bt"></input>
+    <input type="button" onclick="displayHistoryPrefix()" value="窗口历史前缀" class="bt"></input>
+    <a href=#help> 帮助</a>
+    url: <span id="currenturl"></span>
+  </div>
+  <div class="URLtext" style="display:none">
+    <textarea class="URLArea" id="inputURL"></textarea>
+    <input type="button" value="导入" id="subUrl" onclick="handleBatchInput()" />
+  </div>
+  <div>
+    <select id="mySelect" style="width:600px" onchange='copyURLText()'>
+    </select>
+    <input type="button" onclick="handleForm()" value="select URL" class="bt">
+    <input type="button" onclick="handleNext(1)" value="next URL" class="bt">
+    <input type="button" onclick="handleNext(-1)" value="pre URL" class="bt">
+    <span style="display:inline-block; border:1px solid red">
+      <input type="text" id="selectIndex" value="1" style="width:40px">
+      <input type="button" onclick="handleSelect()" value="select xx URL" class="bt">
+    </span>
+  </br>
+  输入单个网址 :
+  <input type="text"  id="myInput" style="width:800px"  />
+  <input type="button" onclick="handleInput()" value="input URL" class="bt"/>
+  <input type="button" onclick="controlTips()" value="显示/隐藏窗口信息栏" class="bt" id="controltips"/>
+</div>
+<div id="infoTip">
+  <span id="l1">可以用鼠标动态的改变下面3个窗口的大小</span>
+  <span id="l2"></span>
+  <span id="lefttips"></span>
+
+</br>
+<span id="r1"></span>
+<span id="r2"> </span>
+<span id="pctips"></span>
+<span id="applynews"></span>
+<span id="righttips"></span>
+</div></br>
+<div id="myiframe">          
+<!--   <iframe id="pcwin"  sandbox="allow-same-origin allow-forms allow-scripts"></iframe>    -->   
+  <iframe id="leftwin" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>
+  <iframe id="rightwin" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>       
+</div>
+<div id="help"><pre>
+  可能的窗口前缀： 
+  搜索前端： http://m.baidu.com/s?word=
+  可能的数据前缀：http://m.baidu.com/s?word=   
+<!--   批量导入时，会过滤掉低于5个字符的url -->
+</pre>          
+</div>
+</body>
+</html>
